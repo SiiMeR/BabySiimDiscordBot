@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 
-namespace BabySiimDiscordBot
+namespace BabySiimDiscordBot.Modules
 {
     public class CopycatModule : ModuleBase<SocketCommandContext>
     {

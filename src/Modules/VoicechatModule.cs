@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,7 @@ using Discord;
 using Discord.Audio;
 using Discord.Commands;
 
-namespace BabySiimDiscordBot
+namespace BabySiimDiscordBot.Modules
 {
     public class VoicechatModule : ModuleBase<SocketCommandContext>
     {

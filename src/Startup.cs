@@ -1,3 +1,4 @@
+using BabySiimDiscordBot.Models.Options;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Builder;

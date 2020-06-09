@@ -7,7 +7,7 @@ using Discord.Commands;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
 
-namespace BabySiimDiscordBot
+namespace BabySiimDiscordBot.Modules
 {
     [Group("math")]
     public class MathModule : ModuleBase<SocketCommandContext>

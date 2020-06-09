@@ -1,13 +1,12 @@
 using System;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using BabySiimDiscordBot.Models.Options;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NLog;
 
 namespace BabySiimDiscordBot
 {
@@ -71,8 +70,7 @@ namespace BabySiimDiscordBot
             }
             
             _logger.LogInformation($"Received message {messageParam.Content}");
-            //
-            
+
             // Don't process the command if it was a system message
             if (!(messageParam is SocketUserMessage message)) return;
 

@@ -1,4 +1,4 @@
-namespace BabySiimDiscordBot
+namespace BabySiimDiscordBot.Models.Options
 {
     public class DiscordOptions
     {
