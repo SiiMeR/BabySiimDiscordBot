@@ -1,5 +1,7 @@
+using System.Reflection;
 using BabySiimDiscordBot.DbContexts;
 using BabySiimDiscordBot.Models.Options;
+using BabySiimDiscordBot.Modules;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
@@ -33,16 +35,21 @@ namespace BabySiimDiscordBot
                     }
                 )
             );
-            services.AddSingleton(new CommandService(
-                new CommandServiceConfig
-                {
-                    LogLevel = LogSeverity.Verbose,     // Tell the logger to give Verbose amount of info
-                    DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
-                }));
+            services.AddSingleton<CommandService>(provider =>
+            {
+                var cs = new CommandService(
+                    new CommandServiceConfig
+                    {
+                        LogLevel = LogSeverity.Verbose, // Tell the logger to give Verbose amount of info
+                        DefaultRunMode = RunMode.Async, // Force all commands to run async by default
+                    });
+
+                cs.AddModulesAsync(Assembly.GetEntryAssembly(), provider).GetAwaiter().GetResult();
+
+                return cs;
+            });
 
             services.AddSingleton<DiscordCommandHandler>();
-
-            services.AddDbContext<DiscordBotDbContext>(options => options.UseSqlite("Data Source=discordbot.db"));
             services.AddOptions<DiscordOptions>().Bind(Configuration);
         }
 

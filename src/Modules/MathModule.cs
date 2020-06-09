@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BabySiimDiscordBot.DbContexts;
+using BabySiimDiscordBot.Models;
 using Discord.Commands;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -13,11 +15,26 @@ namespace BabySiimDiscordBot.Modules
     public class MathModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Dictionary<string, double> _fredyDict = new Dictionary<string, double>();
+        private readonly DiscordBotDbContext _discordBotDbContext;
+
+        public MathModule()
+        {
+            _discordBotDbContext = new DiscordBotDbContext();
+        }
 
         [Command("fconst")]
         public Task FredyDefine(string variable, string value)
         {
-            _fredyDict[variable] = double.Parse(value, CultureInfo.InvariantCulture);
+            if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
+            {
+                _fredyDict[variable] = d;
+
+                var discordBotDbContext = _discordBotDbContext;
+                discordBotDbContext.FredyConstants.Add(new FredyConstant {Name = variable, Value = d});
+                discordBotDbContext.SaveChanges();
+                // _dbContext.FredyConstants.Add(new FredyConstant { Name = variable, Value = d });
+                // _dbContext.SaveChanges();
+            }
 
             return Task.CompletedTask;
         }
@@ -25,7 +42,9 @@ namespace BabySiimDiscordBot.Modules
         [Command("env")]
         public async Task PrintEnv()
         {
-            var strings = _fredyDict.Select(pair => $" - {pair.Key} = {pair.Value}");
+            var strings = _discordBotDbContext.FredyConstants
+                .ToList()
+                .Select(f => $" - {f.Name} = {f.Value}");
 
             var msgs = string.Join(Environment.NewLine, strings);
 
@@ -74,9 +93,9 @@ namespace BabySiimDiscordBot.Modules
             {
                 try
                 {
-                    foreach (var (key, value) in _fredyDict)
+                    foreach (var variable in _discordBotDbContext.FredyConstants)
                     {
-                        num = num.Replace(key, value.ToString(CultureInfo.InvariantCulture));
+                        num = num.Replace(variable.Name, variable.Value.ToString(CultureInfo.InvariantCulture));
                     }
 
                     var result = await CSharpScript.EvaluateAsync<double>(num, ScriptOptions.Default, _fredyDict);

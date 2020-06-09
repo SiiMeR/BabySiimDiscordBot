@@ -42,6 +42,13 @@ namespace BabySiimDiscordBot.Modules
                 .Select(str => $" - {Path.GetFileName(str)}");
 
             var msgs = string.Join(Environment.NewLine, enumerable);
+
+            foreach (var s in enumerable)
+            {
+                await Context.Channel.SendMessageAsync(
+                    s);
+
+            }
             await Context.Channel.SendMessageAsync(
                 $"Sounds that I can play (using `!play <sound>`){Environment.NewLine}{msgs}");
         }
