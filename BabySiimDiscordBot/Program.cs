@@ -1,5 +1,7 @@
 using System;
+using System.IO;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
@@ -13,10 +15,10 @@ namespace BabySiimDiscordBot
         public static void Main(string[] args)
         {
             // NLog: setup the logger first to catch all errors
-            var logger = NLogBuilder.ConfigureNLog("nlog.config").GetCurrentClassLogger();
+            var logger = NLogBuilder.ConfigureNLog(Path.Combine("Configuration","nlog.config")).GetCurrentClassLogger();
             try
             {
-                logger.Debug("init main");
+                logger.Debug("Starting application...");
                 CreateHostBuilder(args).Build().Run(); 
             }
             catch (Exception ex)
@@ -34,6 +36,17 @@ namespace BabySiimDiscordBot
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config.Sources.Clear();
+
+                    var env = hostingContext.HostingEnvironment;
+
+                    config.AddJsonFile(Path.Combine("Configuration", "appsettings.json"), optional: true, reloadOnChange: true)
+                        .AddJsonFile(Path.Combine("Configuration", $"appsettings.{env.EnvironmentName}.json"), optional: true, reloadOnChange: true);
+                    
+                    config.AddEnvironmentVariables();
+                })
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder
