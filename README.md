@@ -1,27 +1,12 @@
 # BabySiimDiscordBot
 
-A discord bot written using the Discord.net framework. 
+A discord bot written using the Discord.Net framework. 
 
-The appsettings.json file is added to gitignore so you will need to add it yourself.
+The AccessToken in the appsettings.json file is not included for security reasons so you will need to add it yourself.
 
-Sample appsettings.json:
-```
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Debug",
-      "Microsoft": "Warning",
-      "Microsoft.Hosting.Lifetime": "Information"
-    }
-  },
-  "AllowedHosts": "*",
-  "AccessToken": "<YOUR_TOKEN_HERE>"
-}
-```
-
-Dependencies you need to download yourself and place in the project's root:
-* fm.exe (ffmpeg.exe renamed to fm.exe)
+Dependencies you need to download yourself and place in the lib folder:
+* ffmpeg.exe
 * libsodium.dll
 * opus.dll
 
-For playing audio, you need to create a folder named 'audio' in the project's root and add the sounds there. 
+The bot searches for audio files to play from the `audio` folder. 
