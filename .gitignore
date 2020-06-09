@@ -567,8 +567,8 @@ fabric.properties
 # End of https://www.toptal.com/developers/gitignore/api/rider,csharp,dotnetcore,aspnetcore
 
 appsettings.Development.json
-Audio/
-#!Audio/.empty
+audio/
+!audio/.empty
 fm.exe
 libsodium.dll
 opus.dll

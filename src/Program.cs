@@ -15,7 +15,7 @@ namespace BabySiimDiscordBot
         public static void Main(string[] args)
         {
             // NLog: setup the logger first to catch all errors
-            var logger = NLogBuilder.ConfigureNLog(Path.Combine("Configuration","nlog.config")).GetCurrentClassLogger();
+            var logger = NLogBuilder.ConfigureNLog(Path.Combine("config","nlog.config")).GetCurrentClassLogger();
             try
             {
                 logger.Debug("Starting application...");
@@ -42,8 +42,8 @@ namespace BabySiimDiscordBot
 
                     var env = hostingContext.HostingEnvironment;
 
-                    config.AddJsonFile(Path.Combine("Configuration", "appsettings.json"), optional: true, reloadOnChange: true)
-                        .AddJsonFile(Path.Combine("Configuration", $"appsettings.{env.EnvironmentName}.json"), optional: true, reloadOnChange: true);
+                    config.AddJsonFile(Path.Combine("config", "appsettings.json"), optional: true, reloadOnChange: true)
+                        .AddJsonFile(Path.Combine("config", $"appsettings.{env.EnvironmentName}.json"), optional: true, reloadOnChange: true);
                     
                     config.AddEnvironmentVariables();
                 })

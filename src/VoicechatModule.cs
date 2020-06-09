@@ -36,8 +36,12 @@ namespace BabySiimDiscordBot
         [Command("list", RunMode = RunMode.Async)] 
         public async Task ListSongs()
         {
-            var strings = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
-            var enumerable = strings.Select(str => $" - {Path.GetFileName(str)}");
+            var filesInDirectory = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
+            
+            var enumerable = filesInDirectory
+                .Where(file => !file.EndsWith(".empty"))
+                .Select(str => $" - {Path.GetFileName(str)}");
+            
             var msgs = string.Join(Environment.NewLine, enumerable);
             await Context.Channel.SendMessageAsync($"Sounds that I can play (using `!play <sound>`)" + Environment.NewLine + msgs);
         }
@@ -59,7 +63,7 @@ namespace BabySiimDiscordBot
         {
             return Process.Start(new ProcessStartInfo
             {//.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
-                FileName = "fm",
+                FileName = "lib/fm",
                 Arguments = $"-hide_banner -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -73,12 +77,8 @@ namespace BabySiimDiscordBot
             using var ffmpeg = CreateStream(path);
             await using var audio = ffmpeg.StandardOutput.BaseStream;
             await using var discord = client.CreatePCMStream(AudioApplication.Mixed);
-            // using var discord = client.CreatePCMStream(AudioApplication.Mixed, 320, 1500, 50);
-            
-            // using var discord = client.Create(AudioApplication.Music, 128 * 1024, 0);
             try
             {
-                // discord.WriteByte((byte) audio.ReadByte());
                 await audio.CopyToAsync(discord);
             }
             catch (Exception e)
