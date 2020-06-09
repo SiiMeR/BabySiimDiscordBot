@@ -12,12 +12,12 @@ namespace BabySiimDiscordBot.Modules
     [Group("math")]
     public class MathModule : ModuleBase<SocketCommandContext>
     {
-        private static readonly Dictionary<string, double> FredyDict = new Dictionary<string, double>();
+        private static readonly Dictionary<string, double> _fredyDict = new Dictionary<string, double>();
 
         [Command("fconst")]
         public Task FredyDefine(string variable, string value)
         {
-            FredyDict[variable] = double.Parse(value, CultureInfo.InvariantCulture);
+            _fredyDict[variable] = double.Parse(value, CultureInfo.InvariantCulture);
 
             return Task.CompletedTask;
         }
@@ -25,16 +25,12 @@ namespace BabySiimDiscordBot.Modules
         [Command("env")]
         public async Task PrintEnv()
         {
-            var strings = FredyDict.Select(pair => $" - {pair.Key} = {pair.Value}");
+            var strings = _fredyDict.Select(pair => $" - {pair.Key} = {pair.Value}");
 
             var msgs = string.Join(Environment.NewLine, strings);
 
             await Context.Channel.SendMessageAsync($"Currently defined environment:{Environment.NewLine}{msgs}");
         }
-
-        [Command("crash")]
-        public Task Crash() => throw new Exception();
-
 
         [Command("square")]
         [Summary("Squares a number.")]
@@ -70,7 +66,7 @@ namespace BabySiimDiscordBot.Modules
     at org.mortbay.jetty.bio.SocketConnector$Connection.run(SocketConnector.java:228)
     at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)```");
             }
-            else if (FredyDict.TryGetValue(num, out var val))
+            else if (_fredyDict.TryGetValue(num, out var val))
             {
                 await Context.Channel.SendMessageAsync($"{num}^2 = {val * val}");
             }
@@ -78,12 +74,12 @@ namespace BabySiimDiscordBot.Modules
             {
                 try
                 {
-                    foreach (var (key, value) in FredyDict)
+                    foreach (var (key, value) in _fredyDict)
                     {
                         num = num.Replace(key, value.ToString(CultureInfo.InvariantCulture));
                     }
 
-                    var result = await CSharpScript.EvaluateAsync<double>(num, ScriptOptions.Default, FredyDict);
+                    var result = await CSharpScript.EvaluateAsync<double>(num, ScriptOptions.Default, _fredyDict);
                     await Context.Channel.SendMessageAsync($"({num})^2 = {Math.Pow(result, 2)}");
                 }
                 catch (Exception e)

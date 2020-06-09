@@ -76,7 +76,7 @@ namespace BabySiimDiscordBot.Modules
             // Create FFmpeg using the previous example
             using var ffmpeg = CreateStream(path);
             await using var audio = ffmpeg.StandardOutput.BaseStream;
-            await using var discord = client.CreateDirectPCMStream(AudioApplication.Mixed);
+            await using var discord = client.CreatePCMStream(AudioApplication.Mixed);
             try
             {
                 await audio.CopyToAsync(discord);

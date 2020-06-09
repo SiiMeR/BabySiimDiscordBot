@@ -104,6 +104,7 @@ namespace BabySiimDiscordBot
             if (!result.IsSuccess && result is ExecuteResult executeResult)
             {
                 _logger.LogError(executeResult.Exception, executeResult.ErrorReason);
+                await context.Channel.SendMessageAsync(result.ToString());
                 await messageParam.AddReactionAsync(new Emoji("\uD83D\uDE10"));
             }
             else

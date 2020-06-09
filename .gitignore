@@ -572,3 +572,6 @@ audio/*
 
 lib/*
 !lib/.empty
+
+db/*
+!db/.empty

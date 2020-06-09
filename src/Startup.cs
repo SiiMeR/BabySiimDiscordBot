@@ -1,7 +1,10 @@
+using BabySiimDiscordBot.DbContexts;
 using BabySiimDiscordBot.Models.Options;
+using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,10 +24,25 @@ namespace BabySiimDiscordBot
         {
             services.AddControllers();
 
-            services.AddSingleton<DiscordSocketClient>();
-            services.AddSingleton<CommandService>();
+            services.AddSingleton(new DiscordSocketClient(
+                    new DiscordSocketConfig
+                    {
+                        LogLevel = LogSeverity.Verbose,
+                        HandlerTimeout = 5000,
+                        MessageCacheSize = 1000
+                    }
+                )
+            );
+            services.AddSingleton(new CommandService(
+                new CommandServiceConfig
+                {
+                    LogLevel = LogSeverity.Verbose,     // Tell the logger to give Verbose amount of info
+                    DefaultRunMode = RunMode.Async,     // Force all commands to run async by default
+                }));
+
             services.AddSingleton<DiscordCommandHandler>();
 
+            services.AddDbContext<DiscordBotDbContext>(options => options.UseSqlite("Data Source=discordbot.db"));
             services.AddOptions<DiscordOptions>().Bind(Configuration);
         }
 

@@ -7,6 +7,8 @@
     <ItemGroup>
       <PackageReference Include="Discord.Net" Version="2.2.0" />
       <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Scripting" Version="3.7.0-1.final" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.0-preview.4.20220.10" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.0-preview.4.20220.10" />
       <PackageReference Include="NLog" Version="4.7.2" />
       <PackageReference Include="NLog.Web.AspNetCore" Version="4.9.2" />
     </ItemGroup>
@@ -33,7 +35,7 @@
         <Content Include="audio\*.*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
-        <Content Include="lib\*.*">
+        <Content Include="lib\*.*" Link="\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
