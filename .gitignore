@@ -569,6 +569,6 @@ fabric.properties
 appsettings.Development.json
 audio/
 !audio/.empty
-fm.exe
-libsodium.dll
-opus.dll
+
+lib/
+!lib/.empty

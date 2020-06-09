@@ -62,7 +62,7 @@ namespace BabySiimDiscordBot.Modules
         {
             return Process.Start(new ProcessStartInfo
             {//.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
-                FileName = "lib/fm",
+                FileName = "lib/ffmpeg",
                 Arguments = $"-hide_banner -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
@@ -72,10 +72,11 @@ namespace BabySiimDiscordBot.Modules
         private async Task SendAsync(IAudioClient client, string path)
         {
             await client.SetSpeakingAsync(true);
+            
             // Create FFmpeg using the previous example
             using var ffmpeg = CreateStream(path);
             await using var audio = ffmpeg.StandardOutput.BaseStream;
-            await using var discord = client.CreatePCMStream(AudioApplication.Mixed);
+            await using var discord = client.CreateDirectPCMStream(AudioApplication.Mixed);
             try
             {
                 await audio.CopyToAsync(discord);
