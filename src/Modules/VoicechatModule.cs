@@ -14,7 +14,7 @@ namespace BabySiimDiscordBot.Modules
         private static IAudioClient _audioClient;
 
         // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
-        [Command("join", RunMode = RunMode.Async)] 
+        [Command("join", RunMode = RunMode.Async)]
         public async Task JoinChannel(IVoiceChannel channel = null)
         {
             // Get the audio channel
@@ -31,21 +31,22 @@ namespace BabySiimDiscordBot.Modules
             // For the next step with transmitting audio, you would want to pass this Audio Client in to a service.
             _audioClient = await channel.ConnectAsync();
         }
-        
-        [Command("list", RunMode = RunMode.Async)] 
+
+        [Command("list", RunMode = RunMode.Async)]
         public async Task ListSongs()
         {
             var filesInDirectory = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
-            
+
             var enumerable = filesInDirectory
                 .Where(file => !file.EndsWith(".empty"))
                 .Select(str => $" - {Path.GetFileName(str)}");
-            
+
             var msgs = string.Join(Environment.NewLine, enumerable);
-            await Context.Channel.SendMessageAsync($"Sounds that I can play (using `!play <sound>`)" + Environment.NewLine + msgs);
+            await Context.Channel.SendMessageAsync(
+                $"Sounds that I can play (using `!play <sound>`){Environment.NewLine}{msgs}");
         }
 
-        [Command("play", RunMode = RunMode.Async)] 
+        [Command("play", RunMode = RunMode.Async)]
         public async Task PlaySong(string songName)
         {
             await JoinChannel();
@@ -54,25 +55,24 @@ namespace BabySiimDiscordBot.Modules
                 await Context.Channel.SendMessageAsync("Bot is not in a voice channel.");
                 return;
             }
-            
+
             await SendAsync(_audioClient, $"audio/{songName}");
         }
-        
-        private Process CreateStream(string path)
-        {
-            return Process.Start(new ProcessStartInfo
-            {//.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
+
+        private Process CreateStream(string path) =>
+            Process.Start(new ProcessStartInfo
+            {
+                //.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
                 FileName = "lib/ffmpeg",
                 Arguments = $"-hide_banner -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
                 UseShellExecute = false,
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true
             });
-        }
-        
+
         private async Task SendAsync(IAudioClient client, string path)
         {
             await client.SetSpeakingAsync(true);
-            
+
             // Create FFmpeg using the previous example
             using var ffmpeg = CreateStream(path);
             await using var audio = ffmpeg.StandardOutput.BaseStream;

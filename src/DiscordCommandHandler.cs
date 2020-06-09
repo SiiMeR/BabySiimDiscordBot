@@ -14,12 +14,13 @@ namespace BabySiimDiscordBot
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commandService;
-        private readonly IServiceProvider _serviceProvider;
         private readonly ILogger<DiscordCommandHandler> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         private bool _isReady;
 
-        public DiscordCommandHandler(DiscordSocketClient client, CommandService commandService, IServiceProvider serviceProvider, IOptions<DiscordOptions> options, ILogger<DiscordCommandHandler> logger)
+        public DiscordCommandHandler(DiscordSocketClient client, CommandService commandService, IServiceProvider serviceProvider,
+            IOptions<DiscordOptions> options, ILogger<DiscordCommandHandler> logger)
         {
             _client = client;
             _commandService = commandService;
@@ -43,10 +44,10 @@ namespace BabySiimDiscordBot
 
         private Task OnClientReady()
         {
-            _logger.LogInformation($"Bot is connected");
+            _logger.LogInformation("Bot is connected");
             _isReady = true;
             return Task.CompletedTask;
-                
+
             // _client.Guilds.ToList().ForEach(Console.WriteLine);
 
             // _client.Guilds.FirstOrDefault(guild => guild.Name == "XtraSpicyChats")
@@ -54,7 +55,7 @@ namespace BabySiimDiscordBot
             //     ?.SendMessageAsync("..markus lits")
             //     ;
         }
-        
+
         private Task OnLog(LogMessage logMessage)
         {
             _logger.LogDebug(logMessage.Message);
@@ -63,25 +64,30 @@ namespace BabySiimDiscordBot
 
         private async Task OnMessageReceived(SocketMessage messageParam)
         {
-            if(!_isReady)
+            if (!_isReady)
             {
-                _logger.LogDebug($"Bot is not yet ready to process messages yet.");
+                _logger.LogDebug("Bot is not yet ready to process messages yet.");
                 return;
             }
-            
+
             _logger.LogInformation($"Received message {messageParam.Content}");
 
             // Don't process the command if it was a system message
-            if (!(messageParam is SocketUserMessage message)) return;
+            if (!(messageParam is SocketUserMessage message))
+            {
+                return;
+            }
 
             // Create a number to track where the prefix ends and the command begins
             var argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix('!', ref argPos) || 
+            if (!(message.HasCharPrefix('!', ref argPos) ||
                   message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
                 message.Author.IsBot)
+            {
                 return;
+            }
 
             // Create a WebSocket-based command context based on the message
             var context = new SocketCommandContext(_client, message);
@@ -89,6 +95,12 @@ namespace BabySiimDiscordBot
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
             var result = await _commandService.ExecuteAsync(context, argPos, _serviceProvider);
+
+            if (!message.HasCharPrefix('!', ref argPos))
+            {
+                return;
+            }
+
             if (!result.IsSuccess && result is ExecuteResult executeResult)
             {
                 _logger.LogError(executeResult.Exception, executeResult.ErrorReason);

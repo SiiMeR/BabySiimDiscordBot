@@ -34,9 +34,8 @@ namespace BabySiimDiscordBot
             app.UseHttpsRedirection();
 
             app.UseRouting();
-            
-            app.ApplicationServices.GetService<DiscordCommandHandler>();
 
+            app.ApplicationServices.GetService<DiscordCommandHandler>();
         }
     }
 }

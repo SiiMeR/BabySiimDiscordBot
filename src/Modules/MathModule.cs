@@ -13,7 +13,7 @@ namespace BabySiimDiscordBot.Modules
     public class MathModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Dictionary<string, double> FredyDict = new Dictionary<string, double>();
-        
+
         [Command("fconst")]
         public Task FredyDefine(string variable, string value)
         {
@@ -28,17 +28,14 @@ namespace BabySiimDiscordBot.Modules
             var strings = FredyDict.Select(pair => $" - {pair.Key} = {pair.Value}");
 
             var msgs = string.Join(Environment.NewLine, strings);
-            
-            await Context.Channel.SendMessageAsync($"Currently defined environment:" + Environment.NewLine + msgs);
+
+            await Context.Channel.SendMessageAsync($"Currently defined environment:{Environment.NewLine}{msgs}");
         }
-        
+
         [Command("crash")]
-        public Task Crash()
-        {
-            throw new Exception();
-        }
-        
-        
+        public Task Crash() => throw new Exception();
+
+
         [Command("square")]
         [Summary("Squares a number.")]
         public async Task SquareAsync([Summary("The number to square.")] string num)
@@ -75,7 +72,6 @@ namespace BabySiimDiscordBot.Modules
             }
             else if (FredyDict.TryGetValue(num, out var val))
             {
-                
                 await Context.Channel.SendMessageAsync($"{num}^2 = {val * val}");
             }
             else
@@ -86,10 +82,9 @@ namespace BabySiimDiscordBot.Modules
                     {
                         num = num.Replace(key, value.ToString(CultureInfo.InvariantCulture));
                     }
-                    
+
                     var result = await CSharpScript.EvaluateAsync<double>(num, ScriptOptions.Default, FredyDict);
                     await Context.Channel.SendMessageAsync($"({num})^2 = {Math.Pow(result, 2)}");
-
                 }
                 catch (Exception e)
                 {
@@ -97,6 +92,5 @@ namespace BabySiimDiscordBot.Modules
                 }
             }
         }
-
     }
 }
