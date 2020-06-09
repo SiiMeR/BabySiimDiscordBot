@@ -55,6 +55,7 @@ namespace BabySiimDiscordBot.Modules
         [Summary("Squares a number.")]
         public async Task SquareAsync([Summary("The number to square.")] string num)
         {
+            var cachedDbEntry = await _discordBotDbContext.FredyConstants.FindAsync(num);
             if (int.TryParse(num, out var parsedNum))
             {
                 // We can also access the channel from the Command Context.
@@ -85,9 +86,9 @@ namespace BabySiimDiscordBot.Modules
     at org.mortbay.jetty.bio.SocketConnector$Connection.run(SocketConnector.java:228)
     at org.mortbay.thread.QueuedThreadPool$PoolThread.run(QueuedThreadPool.java:582)```");
             }
-            else if (_fredyDict.TryGetValue(num, out var val))
+            else if (cachedDbEntry != null)
             {
-                await Context.Channel.SendMessageAsync($"{num}^2 = {val * val}");
+                await Context.Channel.SendMessageAsync($"{num}^2 = {cachedDbEntry.Value * cachedDbEntry.Value}");
             }
             else
             {
