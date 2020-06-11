@@ -35,6 +35,9 @@
         <Content Include="audio\*.*">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
+      <Content Include="db\*.*">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
         <Content Include="lib\*.*" Link="\%(Filename)%(Extension)">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>

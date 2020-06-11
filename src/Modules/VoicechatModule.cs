@@ -43,22 +43,30 @@ namespace BabySiimDiscordBot.Modules
         [Command("list", RunMode = RunMode.Async)]
         public async Task ListSongs()
         {
-            var filesInDirectory = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
-
-            var enumerable = filesInDirectory
-                .Where(file => !file.EndsWith(".empty"))
-                .Select(str => $" - {Path.GetFileName(str)}")
-                .ToList()
-                .ChunkBy(35);
-
-            await Context.Channel.SendMessageAsync(
-                $"Sounds that I can play (using `!play <sound>`):");
-
-            foreach (var s in enumerable)
+            try
             {
-                var msgs = string.Join(Environment.NewLine, s);
-                await Context.Channel.SendMessageAsync($"```{msgs}```");
+                var filesInDirectory = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
+
+                var enumerable = filesInDirectory
+                    .Where(file => !file.EndsWith(".empty"))
+                    .Select(str => $" - {Path.GetFileName(str)}")
+                    .ToList()
+                    .ChunkBy(35);
+
+                await Context.Channel.SendMessageAsync(
+                    $"Sounds that I can play (using `!play <sound>`):");
+
+                foreach (var s in enumerable)
+                {
+                    var msgs = string.Join(Environment.NewLine, s);
+                    await Context.Channel.SendMessageAsync($"```{msgs}```");
+                }
             }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
         }
 
         [Command("play", RunMode = RunMode.Async)]
