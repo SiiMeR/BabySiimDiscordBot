@@ -570,8 +570,5 @@ appsettings.Development.json
 audio/*
 !audio/.empty
 
-lib/*
-!lib/.empty
-
 db/*
 !db/.empty
