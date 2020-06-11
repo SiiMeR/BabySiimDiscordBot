@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BabySiimDiscordBot.Extensions;
+using BabySiimDiscordBot.Services;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
@@ -11,7 +13,13 @@ namespace BabySiimDiscordBot.Modules
 {
     public class VoicechatModule : ModuleBase<SocketCommandContext>
     {
+        private readonly IYoutubeService _youtubeService;
         private static IAudioClient _audioClient;
+
+        public VoicechatModule(IYoutubeService youtubeService)
+        {
+            _youtubeService = youtubeService;
+        }
 
         // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
         [Command("join", RunMode = RunMode.Async)]
@@ -39,27 +47,35 @@ namespace BabySiimDiscordBot.Modules
 
             var enumerable = filesInDirectory
                 .Where(file => !file.EndsWith(".empty"))
-                .Select(str => $" - {Path.GetFileName(str)}");
+                .Select(str => $" - {Path.GetFileName(str)}")
+                .ToList()
+                .ChunkBy(35);
 
-            var msgs = string.Join(Environment.NewLine, enumerable);
+            await Context.Channel.SendMessageAsync(
+                $"Sounds that I can play (using `!play <sound>`):");
 
             foreach (var s in enumerable)
             {
-                await Context.Channel.SendMessageAsync(
-                    s);
-
+                var msgs = string.Join(Environment.NewLine, s);
+                await Context.Channel.SendMessageAsync($"```{msgs}```");
             }
-            await Context.Channel.SendMessageAsync(
-                $"Sounds that I can play (using `!play <sound>`){Environment.NewLine}{msgs}");
         }
 
         [Command("play", RunMode = RunMode.Async)]
         public async Task PlaySong(string songName)
         {
             await JoinChannel();
+
             if (_audioClient == null)
             {
                 await Context.Channel.SendMessageAsync("Bot is not in a voice channel.");
+                return;
+            }
+
+            if (songName.ToLower().Contains("youtube.com")) {
+                var result = await _youtubeService.DownloadFromYoutube(songName);
+
+                await SendAsync(_audioClient, result);
                 return;
             }
 
@@ -78,6 +94,7 @@ namespace BabySiimDiscordBot.Modules
 
         private async Task SendAsync(IAudioClient client, string path)
         {
+
             await client.SetSpeakingAsync(true);
 
             // Create FFmpeg using the previous example
@@ -87,10 +104,6 @@ namespace BabySiimDiscordBot.Modules
             try
             {
                 await audio.CopyToAsync(discord);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
             }
             finally
             {

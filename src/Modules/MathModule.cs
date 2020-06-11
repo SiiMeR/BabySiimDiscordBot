@@ -32,8 +32,6 @@ namespace BabySiimDiscordBot.Modules
                 var discordBotDbContext = _discordBotDbContext;
                 discordBotDbContext.FredyConstants.Add(new FredyConstant {Name = variable, Value = d});
                 discordBotDbContext.SaveChanges();
-                // _dbContext.FredyConstants.Add(new FredyConstant { Name = variable, Value = d });
-                // _dbContext.SaveChanges();
             }
 
             return Task.CompletedTask;

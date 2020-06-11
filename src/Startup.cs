@@ -1,12 +1,10 @@
 using System.Reflection;
-using BabySiimDiscordBot.DbContexts;
 using BabySiimDiscordBot.Models.Options;
-using BabySiimDiscordBot.Modules;
+using BabySiimDiscordBot.Services;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -51,6 +49,8 @@ namespace BabySiimDiscordBot
 
             services.AddSingleton<DiscordCommandHandler>();
             services.AddOptions<DiscordOptions>().Bind(Configuration);
+
+            services.AddTransient<IYoutubeService, YoutubeService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
