@@ -31,6 +31,8 @@ namespace BabySiimDiscordBot
             _client.Ready += OnClientReady;
             _client.Log += OnLog;
 
+            _commandService.CommandExecuted += CommandExecutedAsync;
+
             StartClient(options.Value.AccessToken).GetAwaiter().GetResult();
         }
 
@@ -38,8 +40,6 @@ namespace BabySiimDiscordBot
         {
             await _client.LoginAsync(TokenType.Bot, accessToken);
             await _client.StartAsync();
-
-            await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), _serviceProvider);
         }
 
         private Task OnClientReady()
@@ -47,18 +47,11 @@ namespace BabySiimDiscordBot
             _logger.LogInformation("Bot is connected");
             _isReady = true;
             return Task.CompletedTask;
-
-            // _client.Guilds.ToList().ForEach(Console.WriteLine);
-
-            // _client.Guilds.FirstOrDefault(guild => guild.Name == "XtraSpicyChats")
-            //     ?.TextChannels.FirstOrDefault(channel => channel.Name == "lööps-rant")
-            //     ?.SendMessageAsync("..markus lits")
-            //     ;
         }
 
         private Task OnLog(LogMessage logMessage)
         {
-            _logger.LogDebug(logMessage.Message);
+            _logger.LogInformation(logMessage.Message);
             return Task.CompletedTask;
         }
 
@@ -70,21 +63,21 @@ namespace BabySiimDiscordBot
                 return;
             }
 
-            _logger.LogInformation($"Received message {messageParam.Content}");
-
             // Don't process the command if it was a system message
             if (!(messageParam is SocketUserMessage message))
             {
                 return;
             }
 
+            _logger.LogInformation($"Received message {messageParam.Content}");
+
+
+
             // Create a number to track where the prefix ends and the command begins
             var argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix('!', ref argPos) ||
-                  message.HasMentionPrefix(_client.CurrentUser, ref argPos)) ||
-                message.Author.IsBot)
+            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)) || message.Author.IsBot)
             {
                 return;
             }
@@ -103,13 +96,37 @@ namespace BabySiimDiscordBot
 
             if (!result.IsSuccess && result is ExecuteResult executeResult)
             {
-                _logger.LogError(executeResult.Exception, executeResult.ErrorReason);
-                await context.Channel.SendMessageAsync(result.ToString());
                 await messageParam.AddReactionAsync(new Emoji("\uD83D\uDE10"));
             }
             else
             {
                 await messageParam.AddReactionAsync(new Emoji("\uD83D\uDE0B"));
+            }
+        }
+
+        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        {
+            if (!command.IsSpecified && result.IsSuccess)
+            {
+                return;
+            }
+
+            switch (result.Error)
+            {
+                case CommandError.UnknownCommand:
+                    break;
+                case CommandError.BadArgCount:
+                case CommandError.ParseFailed:
+                case CommandError.ObjectNotFound:
+                case CommandError.MultipleMatches:
+                case CommandError.UnmetPrecondition:
+                case CommandError.Exception:
+                    await context.Channel.SendMessageAsync(result.ErrorReason);
+                    break;
+                case CommandError.Unsuccessful:
+                    break;
+                case null:
+                    break;
             }
         }
     }

@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.Scripting;
 namespace BabySiimDiscordBot.Modules
 {
     [Group("math")]
+    [Alias("m")]
     public class MathModule : ModuleBase<SocketCommandContext>
     {
         private static readonly Dictionary<string, double> _fredyDict = new Dictionary<string, double>();
@@ -50,6 +51,7 @@ namespace BabySiimDiscordBot.Modules
         }
 
         [Command("square")]
+        [Alias("sqr", "s")]
         [Summary("Squares a number.")]
         public async Task SquareAsync([Summary("The number to square.")] string num)
         {

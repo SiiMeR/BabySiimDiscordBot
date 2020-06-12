@@ -8,17 +8,20 @@ using BabySiimDiscordBot.Services;
 using Discord;
 using Discord.Audio;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 
 namespace BabySiimDiscordBot.Modules
 {
     public class VoicechatModule : ModuleBase<SocketCommandContext>
     {
         private readonly IYoutubeService _youtubeService;
+        private readonly ILogger<VoicechatModule> _logger;
         private static IAudioClient _audioClient;
 
-        public VoicechatModule(IYoutubeService youtubeService)
+        public VoicechatModule(IYoutubeService youtubeService, ILogger<VoicechatModule> logger)
         {
             _youtubeService = youtubeService;
+            _logger = logger;
         }
 
         // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
@@ -41,30 +44,27 @@ namespace BabySiimDiscordBot.Modules
         }
 
         [Command("list", RunMode = RunMode.Async)]
+        [Alias("l")]
         public async Task ListSongs()
         {
-            try
+            var songsDirectory = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio");
+
+            _logger.LogInformation($"Listing audio files from {songsDirectory}");
+            var filesInDirectory = Directory.GetFiles(songsDirectory);
+
+            var enumerable = filesInDirectory
+                .Where(file => !file.EndsWith(".empty"))
+                .Select(str => $" - {Path.GetFileName(str)}")
+                .ToList()
+                .ChunkBy(35);
+
+            await Context.Channel.SendMessageAsync(
+                $"Sounds that I can play (using `!play <sound>`):");
+
+            foreach (var s in enumerable)
             {
-                var filesInDirectory = Directory.GetFiles(Path.Join(AppDomain.CurrentDomain.BaseDirectory, "audio"));
-
-                var enumerable = filesInDirectory
-                    .Where(file => !file.EndsWith(".empty"))
-                    .Select(str => $" - {Path.GetFileName(str)}")
-                    .ToList()
-                    .ChunkBy(35);
-
-                await Context.Channel.SendMessageAsync(
-                    $"Sounds that I can play (using `!play <sound>`):");
-
-                foreach (var s in enumerable)
-                {
-                    var msgs = string.Join(Environment.NewLine, s);
-                    await Context.Channel.SendMessageAsync($"```{msgs}```");
-                }
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
+                var msgs = string.Join(Environment.NewLine, s);
+                await Context.Channel.SendMessageAsync($"```{msgs}```");
             }
 
         }
