@@ -12,6 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace BabySiimDiscordBot.Modules
 {
+    [Group("music")]
+    [Alias("m", "sound")]
     public class VoicechatModule : ModuleBase<SocketCommandContext>
     {
         private readonly IYoutubeService _youtubeService;
@@ -38,7 +40,6 @@ namespace BabySiimDiscordBot.Modules
 
             await channel.DisconnectAsync();
 
-            await Task.Delay(1);
             // For the next step with transmitting audio, you would want to pass this Audio Client in to a service.
             _audioClient = await channel.ConnectAsync();
         }
@@ -56,7 +57,7 @@ namespace BabySiimDiscordBot.Modules
                 .Where(file => !file.EndsWith(".empty"))
                 .Select(str => $" - {Path.GetFileName(str)}")
                 .ToList()
-                .ChunkBy(35);
+                .ChunkBy(40);
 
             await Context.Channel.SendMessageAsync(
                 $"Sounds that I can play (using `!play <sound>`):");
@@ -90,15 +91,25 @@ namespace BabySiimDiscordBot.Modules
             await SendAsync(_audioClient, $"audio/{songName}");
         }
 
-        private Process CreateStream(string path) =>
-            Process.Start(new ProcessStartInfo
+        [Command("stop", RunMode = RunMode.Async)]
+        public async Task StopSong()
+        {
+            await JoinChannel();
+        }
+
+        [Command("leave", RunMode = RunMode.Async)]
+        public async Task LeaveVoiceChannel()
+        {
+            // Get the audio channel
+            var channel = (Context.User as IGuildUser)?.VoiceChannel;
+            if (channel == null)
             {
-                //.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
-                FileName = "lib/ffmpeg",
-                Arguments = $"-hide_banner -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            });
+                await Context.Channel.SendMessageAsync("Bot must be in a voice channel to leave from.");
+                return;
+            }
+
+            await channel.DisconnectAsync();
+        }
 
         private async Task SendAsync(IAudioClient client, string path)
         {
@@ -119,5 +130,16 @@ namespace BabySiimDiscordBot.Modules
                 await client.SetSpeakingAsync(false);
             }
         }
+
+        private Process CreateStream(string path) =>
+            Process.Start(new ProcessStartInfo
+            {
+                //.\ffmpeg.exe -hide_banner -loglevel panic -i .\hyun.mp3 -ac 2 -f s16le -ar 48000 pipe:1
+                FileName = "lib/ffmpeg",
+                Arguments = $"-hide_banner -i \"{path}\" -ac 2 -f s16le -ar 48000 pipe:1",
+                UseShellExecute = false,
+                RedirectStandardOutput = true
+            });
+
     }
 }

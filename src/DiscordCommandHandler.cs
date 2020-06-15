@@ -114,7 +114,6 @@ namespace BabySiimDiscordBot
             switch (result.Error)
             {
                 case CommandError.UnknownCommand:
-                    break;
                 case CommandError.BadArgCount:
                 case CommandError.ParseFailed:
                 case CommandError.ObjectNotFound:
@@ -124,8 +123,10 @@ namespace BabySiimDiscordBot
                     await context.Channel.SendMessageAsync(result.ErrorReason);
                     break;
                 case CommandError.Unsuccessful:
+                    _logger.LogInformation($"Processing command '{command.Value?.Name ?? string.Empty}' failed: {result.ErrorReason}");
                     break;
-                case null:
+                default:
+                    _logger.LogError($"Unknown error occured: {result.ErrorReason}");
                     break;
             }
         }
