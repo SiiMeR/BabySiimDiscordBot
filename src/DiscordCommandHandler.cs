@@ -71,8 +71,6 @@ namespace BabySiimDiscordBot
 
             _logger.LogInformation($"Received message {messageParam.Content}");
 
-
-
             // Create a number to track where the prefix ends and the command begins
             var argPos = 0;
 
@@ -87,29 +85,18 @@ namespace BabySiimDiscordBot
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
-            var result = await _commandService.ExecuteAsync(context, argPos, _serviceProvider);
-
-            if (!message.HasCharPrefix('!', ref argPos))
-            {
-                return;
-            }
-
-            if (!result.IsSuccess && result is ExecuteResult executeResult)
-            {
-                await messageParam.AddReactionAsync(new Emoji("\uD83D\uDE10"));
-            }
-            else
-            {
-                await messageParam.AddReactionAsync(new Emoji("\uD83D\uDE0B"));
-            }
+            await _commandService.ExecuteAsync(context, argPos, _serviceProvider);
         }
 
-        public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
+        private async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
         {
             if (!command.IsSpecified && result.IsSuccess)
             {
+                await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE0B"));
                 return;
             }
+
+            await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE10"));
 
             switch (result.Error)
             {

@@ -59,13 +59,12 @@ namespace BabySiimDiscordBot.Modules
                 .ToList()
                 .ChunkBy(40);
 
-            await Context.Channel.SendMessageAsync(
-                $"Sounds that I can play (using `!play <sound>`):");
+            await ReplyAsync($"Sounds that I can play (using `!play <sound>`):");
 
             foreach (var s in enumerable)
             {
                 var msgs = string.Join(Environment.NewLine, s);
-                await Context.Channel.SendMessageAsync($"```{msgs}```");
+                await ReplyAsync($"```{msgs}```");
             }
 
         }
@@ -94,7 +93,7 @@ namespace BabySiimDiscordBot.Modules
         [Command("stop", RunMode = RunMode.Async)]
         public async Task StopSong()
         {
-            await JoinChannel();
+            await _audioClient.StopAsync();
         }
 
         [Command("leave", RunMode = RunMode.Async)]

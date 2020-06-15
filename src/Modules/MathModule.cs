@@ -18,12 +18,14 @@ namespace BabySiimDiscordBot.Modules
         private static readonly Dictionary<string, double> _fredyDict = new Dictionary<string, double>();
         private readonly DiscordBotDbContext _discordBotDbContext;
 
+        /// <summary>Setup for the math module.</summary>
         public MathModule()
         {
             _discordBotDbContext = new DiscordBotDbContext();
         }
 
         [Command("fconst")]
+        [Summary("Define a new variable to be used in other math commands.")]
         public Task FredyDefine(string variable, string value)
         {
             if (double.TryParse(value, NumberStyles.Any, CultureInfo.InvariantCulture, out var d))
