@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using BabySiimDiscordBot.Models.Options;
 using Discord;
@@ -10,21 +9,25 @@ using Microsoft.Extensions.Options;
 
 namespace BabySiimDiscordBot
 {
+    /// <summary>Handles messages from the discord API.</summary>
     public class DiscordCommandHandler
     {
         private readonly DiscordSocketClient _client;
         private readonly CommandService _commandService;
         private readonly ILogger<DiscordCommandHandler> _logger;
         private readonly IServiceProvider _serviceProvider;
+        private readonly DiscordOptions _options;
 
         private bool _isReady;
 
+        /// <summary>Construct a new instance of this object.</summary>
         public DiscordCommandHandler(DiscordSocketClient client, CommandService commandService, IServiceProvider serviceProvider,
             IOptions<DiscordOptions> options, ILogger<DiscordCommandHandler> logger)
         {
             _client = client;
             _commandService = commandService;
             _serviceProvider = serviceProvider;
+            _options = options.Value;
             _logger = logger;
 
             _client.MessageReceived += OnMessageReceived;
@@ -33,7 +36,7 @@ namespace BabySiimDiscordBot
 
             _commandService.CommandExecuted += CommandExecutedAsync;
 
-            StartClient(options.Value.AccessToken).GetAwaiter().GetResult();
+            StartClient(_options.AccessToken).Wait();
         }
 
         private async Task StartClient(string accessToken)
@@ -59,7 +62,7 @@ namespace BabySiimDiscordBot
         {
             if (!_isReady)
             {
-                _logger.LogDebug("Bot is not yet ready to process messages yet.");
+                _logger.LogDebug("Bot is not ready to process messages yet.");
                 return;
             }
 
@@ -75,7 +78,8 @@ namespace BabySiimDiscordBot
             var argPos = 0;
 
             // Determine if the message is a command based on the prefix and make sure no bots trigger commands
-            if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)) || message.Author.IsBot)
+            if (!(message.HasCharPrefix(_options.CommandPrefix, ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos))
+                || message.Author.IsBot)
             {
                 return;
             }
@@ -92,25 +96,29 @@ namespace BabySiimDiscordBot
         {
             if (!command.IsSpecified && result.IsSuccess)
             {
-                await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE0B"));
+                await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE10"));
                 return;
             }
 
-            await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE10"));
+            await context.Message.AddReactionAsync(new Emoji("\uD83D\uDE0B"));
+
+            var commandOrEmptyString = command.Value?.Name ?? string.Empty;
 
             switch (result.Error)
             {
                 case CommandError.UnknownCommand:
+                    _logger.LogDebug($"Unknown command '{commandOrEmptyString}'");
+                    break;
                 case CommandError.BadArgCount:
                 case CommandError.ParseFailed:
                 case CommandError.ObjectNotFound:
                 case CommandError.MultipleMatches:
                 case CommandError.UnmetPrecondition:
                 case CommandError.Exception:
-                    await context.Channel.SendMessageAsync(result.ErrorReason);
+                    await context.Channel.SendMessageAsync($"Exception: {result.ErrorReason}");
                     break;
                 case CommandError.Unsuccessful:
-                    _logger.LogInformation($"Processing command '{command.Value?.Name ?? string.Empty}' failed: {result.ErrorReason}");
+                    _logger.LogInformation($"Processing command '{commandOrEmptyString}' failed: {result.ErrorReason}");
                     break;
                 default:
                     _logger.LogError($"Unknown error occured: {result.ErrorReason}");

@@ -85,11 +85,11 @@ namespace BabySiimDiscordBot.Modules
 
                 await currentTimeMessage.ModifyAsync((properties =>
                 {
-                    properties.Content = $"```[{RepeatChar('#', ++currentProgressBars)}{RepeatChar('-', maxProgressBars - currentProgressBars)}] {currentProgressBars * 10}% {animation[++animationIndex % animation.Length]}```";
+                    properties.Content = $"```[{repeatChar('#', ++currentProgressBars)}{repeatChar('-', maxProgressBars - currentProgressBars)}] {currentProgressBars * 10}% {animation[++animationIndex % animation.Length]}```";
                 }));
             }
 
-            string RepeatChar(char c, int times)
+            string repeatChar(char c, int times)
             {
                 return times <= 0
                     ? string.Empty

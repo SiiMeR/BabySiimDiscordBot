@@ -10,8 +10,10 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
 namespace BabySiimDiscordBot
 {
+    /// <summary>Entry point of the program.</summary>
     public class Program
     {
+        /// <summary>Main method.</summary>
         public static void Main(string[] args)
         {
             // NLog: setup the logger first to catch all errors

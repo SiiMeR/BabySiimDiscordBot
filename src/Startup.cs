@@ -12,8 +12,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BabySiimDiscordBot
 {
+    /// <summary>Logic that is executed on program startup.</summary>
     public class Startup
     {
+        /// <summary>Constructor.</summary>
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -21,7 +23,7 @@ namespace BabySiimDiscordBot
 
         private IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        /// <summary>This method gets called by the runtime. Use this method to add services to the container.</summary>
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -35,7 +37,7 @@ namespace BabySiimDiscordBot
                     }
                 )
             );
-            services.AddSingleton<CommandService>(provider =>
+            services.AddSingleton(provider =>
             {
                 var cs = new CommandService(
                     new CommandServiceConfig
@@ -57,7 +59,7 @@ namespace BabySiimDiscordBot
             services.AddDbContext<DiscordBotDbContext>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        /// <summary>This method gets called by the runtime. Use this method to configure the HTTP request pipeline.</summary>
         public void Configure(IApplicationBuilder app)
         {
             using (var scope = app.ApplicationServices.CreateScope())
