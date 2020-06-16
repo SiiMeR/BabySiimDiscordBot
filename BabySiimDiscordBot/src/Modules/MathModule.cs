@@ -11,6 +11,7 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace BabySiimDiscordBot.Modules
 {
+    /// <inheritdoc />
     [Group("math")]
     [Alias("m")]
     public class MathModule : ModuleBase<SocketCommandContext>
@@ -24,6 +25,7 @@ namespace BabySiimDiscordBot.Modules
             _discordBotDbContext = new DiscordBotDbContext();
         }
 
+        /// <summary>Define a new variable to be used in other math commands.</summary>
         [Command("fconst")]
         [Summary("Define a new variable to be used in other math commands.")]
         public Task FredyDefine(string variable, string value)
@@ -40,7 +42,9 @@ namespace BabySiimDiscordBot.Modules
             return Task.CompletedTask;
         }
 
+        /// <summary>Prints the list of currently defined variables.</summary>
         [Command("env")]
+        [Summary("Prints the list of currently defined variables.")]
         public async Task PrintEnv()
         {
             var strings = _discordBotDbContext.FredyConstants
@@ -52,6 +56,7 @@ namespace BabySiimDiscordBot.Modules
             await Context.Channel.SendMessageAsync($"Currently defined environment:{Environment.NewLine}{msgs}");
         }
 
+        /// <summary>Squares a number.</summary>
         [Command("square")]
         [Alias("sqr", "s")]
         [Summary("Squares a number.")]
