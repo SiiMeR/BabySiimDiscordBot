@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Timers;
 using Discord;
 using Discord.Commands;
+using Microsoft.Extensions.Logging;
 using Timer = System.Timers.Timer;
 
 namespace BabySiimDiscordBot.Modules
@@ -15,11 +16,13 @@ namespace BabySiimDiscordBot.Modules
     public class GeneralModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _commandService;
+        private readonly ILogger<GeneralModule> _logger;
 
         /// <summary>Construct a new instance of this object.</summary>
-        public GeneralModule(CommandService commandService)
+        public GeneralModule(CommandService commandService, ILogger<GeneralModule> logger)
         {
             _commandService = commandService;
+            _logger = logger;
         }
 
         /// <summary>Clear as much of the bot's commands from the calling channel as possible.</summary>
@@ -28,11 +31,19 @@ namespace BabySiimDiscordBot.Modules
         {
             var msgs = (await Context.Channel
                 .GetMessagesAsync()
-                .FlattenAsync());
+                .FlattenAsync())
+                .Where(message => message.Author.IsBot && message.Author.Username == "Baby Siim");
 
-            if (Context.Channel is ITextChannel channel)
+            foreach (var message in msgs)
             {
-                await channel.DeleteMessagesAsync(msgs);
+                try
+                {
+                    await message.DeleteAsync();
+                }
+                catch(Exception e)
+                {
+                    _logger.LogTrace($"Exception while deleting message: {e.Message}");
+                }
             }
         }
 
