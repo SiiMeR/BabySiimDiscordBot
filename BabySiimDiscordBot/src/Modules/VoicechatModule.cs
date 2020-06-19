@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -12,6 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace BabySiimDiscordBot.Modules
 {
+    // TODO: This module should implement an interface defining all the commands.
     /// <inheritdoc />
     [Group("music")]
     [Alias("m", "sound")]
@@ -20,7 +22,11 @@ namespace BabySiimDiscordBot.Modules
         // TODO: Perhaps MediatR should be used to reduce coupling between modules and services?
         private readonly IYoutubeService _youtubeService;
         private readonly ILogger<VoicechatModule> _logger;
+
         private static IAudioClient _audioClient;
+        private static Queue<string> _songQueue = new Queue<string>();
+
+        private static bool _isCurrentlyPlaying;
 
         /// <summary>Construct a new instance of this object.</summary>
         public VoicechatModule(IYoutubeService youtubeService, ILogger<VoicechatModule> logger)
@@ -76,12 +82,40 @@ namespace BabySiimDiscordBot.Modules
 
         }
 
+        [Command("skip")]
+        public async Task Skip()
+        {
+            if (_songQueue.Count == 0)
+            {
+                await ReplyAsync($"Cannot skip the last song!");
+                return;
+            }
+
+            await _audioClient.StopAsync();
+
+            var nextSong = _songQueue.Dequeue();
+
+            await PlaySong(nextSong);
+        }
+
         /// <summary>
-        /// Play a song.
+        /// Play a song. Adds it to the queue if there is a song already playing.
         /// </summary>
         /// <param name="songName">The filename of the song to play.</param>
         [Command("play", RunMode = RunMode.Async)]
         public async Task PlaySong(string songName)
+        {
+            if (_isCurrentlyPlaying || _songQueue.Count > 0)
+            {
+                _songQueue.Enqueue(songName);
+                await ReplyAsync($"Added {songName} to the queue. The queue now contains {_songQueue.Count} items.");
+                return;
+            }
+
+            await Play(songName);
+        }
+
+        private async Task Play(string songName)
         {
             await JoinChannel();
 
@@ -90,6 +124,8 @@ namespace BabySiimDiscordBot.Modules
                 await ReplyAsync("Bot is not in a voice channel.");
                 return;
             }
+
+            _isCurrentlyPlaying = true;
 
             if (songName.ToLower().Contains("youtube.com")) {
                 var result = await _youtubeService.DownloadSong(songName);
@@ -102,6 +138,8 @@ namespace BabySiimDiscordBot.Modules
             }
 
             await SendAudioAsync(_audioClient, $"audio/{songName}");
+
+            _isCurrentlyPlaying = false;
         }
 
         /// <summary>Stop audio playback.</summary>
@@ -156,6 +194,5 @@ namespace BabySiimDiscordBot.Modules
                 UseShellExecute = false,
                 RedirectStandardOutput = true
             });
-
     }
 }
