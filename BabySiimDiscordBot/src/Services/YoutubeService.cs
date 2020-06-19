@@ -1,8 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
+using BabySiimDiscordBot.Models;
 using Microsoft.Extensions.Logging;
 
 namespace BabySiimDiscordBot.Services
@@ -15,7 +15,13 @@ namespace BabySiimDiscordBot.Services
         /// </summary>
         /// <param name="url">URL to the YouTube Video</param>
         /// <returns>The File Path to the downloaded mp3.</returns>
-        Task<string> DownloadFromYoutube(string url);
+        Task<string> DownloadSong(string url);
+
+        /// <summary>
+        /// Get the name and duration of a song.
+        /// </summary>
+        /// <param name="url">The URL of the song.</param>
+        Task<SongData> GetSongInformation(string url);
     }
 
 
@@ -32,24 +38,20 @@ namespace BabySiimDiscordBot.Services
         }
 
         /// <inheritdoc />
-        public async Task<string> DownloadFromYoutube(string url) {
+        public async Task<string> DownloadSong(string url) {
 
             var appBaseDirectory = AppDomain.CurrentDomain.BaseDirectory ?? string.Empty;
+            var file = Path.Combine(appBaseDirectory, $"ytdl-{Guid.NewGuid()}.mp3");
 
             var result = await Task.Run((() =>
             {
-                string file;
-                var count = 0;
-                do {
-                    file = Path.Combine(appBaseDirectory, "botsong" + ++count + ".mp3");
-                } while (File.Exists(file));
-
                 //Download Video
                 var fileWithExtension = file.Replace(".mp3", ".%(ext)s");
 
                 _logger.LogDebug($"Downloading video {url} to {fileWithExtension}");
 
-                var youtubedlDownload = new ProcessStartInfo() {
+                var youtubedlDownload = new ProcessStartInfo
+                {
                     FileName = Path.Combine(appBaseDirectory, "youtube-dl"),
                     Arguments = $"-x --audio-format mp3 -o \"{fileWithExtension}\" {url}",
                     RedirectStandardOutput = true,
@@ -61,7 +63,7 @@ namespace BabySiimDiscordBot.Services
                 //Wait until download is finished
                 youtubedl?.WaitForExit();
 
-                Task.Delay(1000);
+                Task.Delay(500);
 
                 return File.Exists(file) ? file : null;
             }));
@@ -75,6 +77,28 @@ namespace BabySiimDiscordBot.Services
             result = result.Replace("\n", string.Empty).Replace(Environment.NewLine, string.Empty);
 
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<SongData> GetSongInformation(string url)
+        {
+            var appBaseDirectory = AppDomain.CurrentDomain.BaseDirectory ?? string.Empty;
+            var processInfo = new ProcessStartInfo
+            {
+                FileName = Path.Combine(appBaseDirectory, "youtube-dl"),
+                Arguments = $"-e {url}",
+                RedirectStandardOutput = true,
+                UseShellExecute = false
+            };
+
+            var process = Process.Start(processInfo);
+            process?.WaitForExit();
+
+            var title = await process?.StandardOutput?.ReadToEndAsync() ?? "Unknown Song";
+            return new SongData
+            {
+                Title = title
+            };
         }
     }
 }

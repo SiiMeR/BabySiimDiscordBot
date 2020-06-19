@@ -11,15 +11,18 @@ using Timer = System.Timers.Timer;
 
 namespace BabySiimDiscordBot.Modules
 {
+    /// <inheritdoc />
     public class GeneralModule : ModuleBase<SocketCommandContext>
     {
         private readonly CommandService _commandService;
 
+        /// <summary>Construct a new instance of this object.</summary>
         public GeneralModule(CommandService commandService)
         {
             _commandService = commandService;
         }
 
+        /// <summary>Clear as much of the bot's commands from the calling channel as possible.</summary>
         [Command("clear", RunMode = RunMode.Async)]
         public async Task ClearCommands()
         {
@@ -97,6 +100,7 @@ namespace BabySiimDiscordBot.Modules
             }
         }
 
+        /// <summary>Shows the list of all command with their aliases as a discord embed.</summary>
         [Command("help")]
         public async Task ShowHelp()
         {

@@ -109,13 +109,15 @@ namespace BabySiimDiscordBot
                 case CommandError.UnknownCommand:
                     _logger.LogDebug($"Unknown command '{commandOrEmptyString}'");
                     break;
+                case CommandError.Exception:
+                    _logger.LogError($"Exception: {result.ErrorReason}");
+                    break;
                 case CommandError.BadArgCount:
                 case CommandError.ParseFailed:
                 case CommandError.ObjectNotFound:
                 case CommandError.MultipleMatches:
                 case CommandError.UnmetPrecondition:
-                case CommandError.Exception:
-                    await context.Channel.SendMessageAsync($"Exception: {result.ErrorReason}");
+                    await context.Channel.SendMessageAsync($"An error occured: {result.ErrorReason}");
                     break;
                 case CommandError.Unsuccessful:
                     _logger.LogInformation($"Processing command '{commandOrEmptyString}' failed: {result.ErrorReason}");

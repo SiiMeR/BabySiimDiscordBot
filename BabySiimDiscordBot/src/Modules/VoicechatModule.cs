@@ -12,21 +12,27 @@ using Microsoft.Extensions.Logging;
 
 namespace BabySiimDiscordBot.Modules
 {
+    /// <inheritdoc />
     [Group("music")]
     [Alias("m", "sound")]
     public class VoicechatModule : ModuleBase<SocketCommandContext>
     {
+        // TODO: Perhaps MediatR should be used to reduce coupling between modules and services?
         private readonly IYoutubeService _youtubeService;
         private readonly ILogger<VoicechatModule> _logger;
         private static IAudioClient _audioClient;
 
+        /// <summary>Construct a new instance of this object.</summary>
         public VoicechatModule(IYoutubeService youtubeService, ILogger<VoicechatModule> logger)
         {
             _youtubeService = youtubeService;
             _logger = logger;
         }
 
-        // The command's Run Mode MUST be set to RunMode.Async, otherwise, being connected to a voice channel will block the gateway thread.
+        /// <summary>
+        /// Join an audio channel.
+        /// </summary>
+        /// <param name="channel">The channel to join. If channel is not provided, try to join the channel the user is located in.</param>
         [Command("join", RunMode = RunMode.Async)]
         public async Task JoinChannel(IVoiceChannel channel = null)
         {
@@ -34,7 +40,7 @@ namespace BabySiimDiscordBot.Modules
             channel ??= (Context.User as IGuildUser)?.VoiceChannel;
             if (channel == null)
             {
-                await Context.Channel.SendMessageAsync("User must be in a voice channel, or a voice channel must be passed as an argument.");
+                await ReplyAsync("User must be in a voice channel, or a voice channel must be passed as an argument.");
                 return;
             }
 
@@ -44,6 +50,7 @@ namespace BabySiimDiscordBot.Modules
             _audioClient = await channel.ConnectAsync();
         }
 
+        /// <summary>Replies with a list of all songs that have been added locally.</summary>
         [Command("list", RunMode = RunMode.Async)]
         [Alias("l")]
         public async Task ListSongs()
@@ -53,7 +60,7 @@ namespace BabySiimDiscordBot.Modules
             _logger.LogInformation($"Listing audio files from {songsDirectory}");
             var filesInDirectory = Directory.GetFiles(songsDirectory);
 
-            var enumerable = filesInDirectory
+            var chunkedSongList = filesInDirectory
                 .Where(file => !file.EndsWith(".empty"))
                 .Select(str => $" - {Path.GetFileName(str)}")
                 .ToList()
@@ -61,14 +68,18 @@ namespace BabySiimDiscordBot.Modules
 
             await ReplyAsync($"Sounds that I can play (using `!play <sound>`):");
 
-            foreach (var s in enumerable)
+            foreach (var song in chunkedSongList)
             {
-                var msgs = string.Join(Environment.NewLine, s);
+                var msgs = string.Join(Environment.NewLine, song);
                 await ReplyAsync($"```{msgs}```");
             }
 
         }
 
+        /// <summary>
+        /// Play a song.
+        /// </summary>
+        /// <param name="songName">The filename of the song to play.</param>
         [Command("play", RunMode = RunMode.Async)]
         public async Task PlaySong(string songName)
         {
@@ -76,26 +87,31 @@ namespace BabySiimDiscordBot.Modules
 
             if (_audioClient == null)
             {
-                await Context.Channel.SendMessageAsync("Bot is not in a voice channel.");
+                await ReplyAsync("Bot is not in a voice channel.");
                 return;
             }
 
             if (songName.ToLower().Contains("youtube.com")) {
-                var result = await _youtubeService.DownloadFromYoutube(songName);
+                var result = await _youtubeService.DownloadSong(songName);
 
-                await SendAsync(_audioClient, result);
+                var songData = await _youtubeService.GetSongInformation(songName);
+
+                await ReplyAsync($"Now playing: {songData.Title}");
+                await SendAudioAsync(_audioClient, result);
                 return;
             }
 
-            await SendAsync(_audioClient, $"audio/{songName}");
+            await SendAudioAsync(_audioClient, $"audio/{songName}");
         }
 
+        /// <summary>Stop audio playback.</summary>
         [Command("stop", RunMode = RunMode.Async)]
         public async Task StopSong()
         {
             await _audioClient.StopAsync();
         }
 
+        /// <summary>Leave the voice channel.</summary>
         [Command("leave", RunMode = RunMode.Async)]
         public async Task LeaveVoiceChannel()
         {
@@ -103,14 +119,14 @@ namespace BabySiimDiscordBot.Modules
             var channel = (Context.User as IGuildUser)?.VoiceChannel;
             if (channel == null)
             {
-                await Context.Channel.SendMessageAsync("Bot must be in a voice channel to leave from.");
+                await ReplyAsync("Bot must be in a voice channel to leave from.");
                 return;
             }
 
             await channel.DisconnectAsync();
         }
 
-        private async Task SendAsync(IAudioClient client, string path)
+        private async Task SendAudioAsync(IAudioClient client, string path)
         {
 
             await client.SetSpeakingAsync(true);
@@ -130,6 +146,7 @@ namespace BabySiimDiscordBot.Modules
             }
         }
 
+        // TODO: Create a ProcessService or similar and move this logic there (+ some things from SendAsync).
         private Process CreateStream(string path) =>
             Process.Start(new ProcessStartInfo
             {

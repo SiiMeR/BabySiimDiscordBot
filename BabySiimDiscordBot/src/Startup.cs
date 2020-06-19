@@ -26,8 +26,6 @@ namespace BabySiimDiscordBot
         /// <summary>This method gets called by the runtime. Use this method to add services to the container.</summary>
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
-
             services.AddSingleton(new DiscordSocketClient(
                     new DiscordSocketConfig
                     {
@@ -67,8 +65,6 @@ namespace BabySiimDiscordBot
                 var dbContext = scope.ServiceProvider.GetService<DiscordBotDbContext>();
                 dbContext.Database.Migrate();
             }
-
-            app.UseHttpsRedirection();
 
             app.ApplicationServices.GetRequiredService<DiscordCommandHandler>();
         }
